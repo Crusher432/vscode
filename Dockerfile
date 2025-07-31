@@ -1,36 +1,23 @@
 FROM codercom/code-server:latest
 
-# Install Python 3.11 and dev tools (Debian 12 compatible)
-RUN sudo apt-get update && \
-    sudo apt-get install -y python3.11 python3.11-venv python3.11-dev python3-pip && \
-    sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 && \
-    sudo ln -sf /usr/bin/python3.11 /usr/bin/python3 && \
-    python3 --version && pip3 --version && \
-    pip3 install --upgrade pip --break-system-packages
+# Set environment variables
+ENV PASSWORD=Devil444
 
-# Install AI/Agentic ecosystem packages using --break-system-packages
-RUN pip3 install --no-cache-dir \
-    torch torchvision torchaudio \
-    langchain \
-    openai \
-    tiktoken \
-    llama-index \
-    transformers \
-    agentic \
-    rich \
-    numpy pandas requests \
-    --break-system-packages
+# Install Python 3.11 and pip
+RUN sudo apt update && \
+    sudo apt install -y software-properties-common && \
+    sudo add-apt-repository -y ppa:deadsnakes/ppa && \
+    sudo apt update && \
+    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip && \
+    sudo ln -sf python3.11 /usr/bin/python3 && \
+    sudo ln -sf pip3 /usr/bin/pip
 
-# VSCode Extensions (optional)
-RUN code-server --install-extension ms-python.python
-RUN code-server --install-extension GitHub.copilot
+# Install some dev tools and utilities
+RUN sudo apt install -y git curl wget unzip sudo
 
-# Expose port and set password
-ENV PASSWORD="Devil444"
-EXPOSE 8080
+# Add your user to sudoers (code-server runs as 'coder' user)
+RUN echo "coder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Startup script
-COPY startup.sh /home/coder/startup.sh
-RUN chmod +x /home/coder/startup.sh
-
-CMD ["/home/coder/startup.sh"]
+# Optional: Create workspace dir
+RUN mkdir -p /home/coder/project
+WORKDIR /home/coder/project
